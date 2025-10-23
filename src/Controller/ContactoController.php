@@ -8,17 +8,15 @@ use Symfony\Component\Routing\Attribute\Route;
 use App\Entity\Contacto;
 use App\Entity\Provincia;
 use Doctrine\Persistence\ManagerRegistry;
+use App\Form\ContactoFormType as ContactoType;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+
 
 
 class ContactoController extends AbstractController
 {
-    private $contactos = [
-        1 => ["nombre" => "Juan Pérez", "telefono" => "524142432", "email" => "juanp@ieselcaminas.org"],
-        2 => ["nombre" => "Ana López", "telefono" => "58958448", "email" => "anita@ieselcaminas.org"],
-        5 => ["nombre" => "Mario Montero", "telefono" => "5326824", "email" => "mario.mont@ieselcaminas.org"],
-        7 => ["nombre" => "Laura Martínez", "telefono" => "42898966", "email" => "lm2000@ieselcaminas.org"],
-        9 => ["nombre" => "Nora Jover", "telefono" => "54565859", "email" => "norajover@ieselcaminas.org"],
-    ];
+
 #[Route('/contacto/{codigo}', name: 'ficha_contacto', requirements: ['codigo' => '\d+'])]
 public function ficha(int $codigo, ManagerRegistry $doctrine): Response
 {
@@ -87,6 +85,7 @@ public function actualizar(int $id, string $nuevoTelefono, ManagerRegistry $doct
 
     return new Response("<html><body>Contacto actualizado: ID $id, nuevo teléfono: $nuevoTelefono</body></html>");
 }
+#[IsGranted('ROLE_USER')]
 #[Route('/contacto/eliminar/{id}', name: 'eliminar_contacto')]
 public function eliminar(int $id, ManagerRegistry $doctrine): Response
 {
@@ -165,6 +164,109 @@ public function verProvincia(int $id, ManagerRegistry $doctrine): Response
         return new Response("ℹ️ El contacto {$contacto->getNombre()} no tiene provincia asignada");
     }
 }
+#[Route('/contacto/nuevo', name: 'contacto_nuevo')]
+public function nuevo(ManagerRegistry $doctrine, Request $request): Response
+{
+    // Comprobamos si el usuario está logueado
+    if (!$this->getUser()) {
+        return $this->redirectToRoute('app_login');
+    }
+
+    $contacto = new Contacto();
+    $formulario = $this->createForm(ContactoType::class, $contacto);
+    $formulario->handleRequest($request);
+
+    if ($formulario->isSubmitted() && $formulario->isValid()) {
+        $contacto = $formulario->getData();
+        $em = $doctrine->getManager();
+        $em->persist($contacto);
+        $em->flush();
+
+        return $this->redirectToRoute('ficha_contacto', ['codigo' => $contacto->getId()]);
+    }
+
+    return $this->render('nuevo.html.twig', [
+        'formulario' => $formulario->createView()
+    ]);
+}
+
+
+#[IsGranted('ROLE_USER')]
+#[Route('/contacto/editar/{codigo}', name: 'editar', requirements:["codigo"=>"\d+"])]
+
+public function editar(ManagerRegistry $doctrine, Request $request, int $codigo) {
+
+    $repositorio = $doctrine->getRepository(Contacto::class);
+
+    //En este caso, los datos los obtenemos del repositorio de contactos
+
+    $contacto = $repositorio->find($codigo);
+
+    if ($contacto){
+
+        $formulario = $this->createForm(ContactoType::class, $contacto);
+
+
+
+        $formulario->handleRequest($request);
+
+
+
+        if ($formulario->isSubmitted() && $formulario->isValid()) {
+
+            //Esta parte es igual que en la ruta para insertar
+
+            $contacto = $formulario->getData();
+
+            $entityManager = $doctrine->getManager();
+
+            $entityManager->persist($contacto);
+
+            $entityManager->flush();
+
+            return $this->redirectToRoute('ficha_contacto', ["codigo" => $contacto->getId()]);
+
+        }
+
+        return $this->render('nuevo.html.twig', array(
+
+            'formulario' => $formulario->createView()
+
+        ));
+
+    }else{
+
+        return $this->render('ficha_contacto.html.twig', [
+
+            'contacto' => NULL
+
+        ]);
+
+    }
+
+}#[Route('/', name: 'inicio')]
+public function inicio(ManagerRegistry $doctrine): Response
+{
+    // Comprobamos si el usuario está logueado
+    $user = $this->getUser();
+    if (!$user) {
+        return $this->redirectToRoute('app_login');
+    }
+
+    $repositorio = $doctrine->getRepository(Contacto::class);
+    // Devuelve todos los contactos como objetos Contacto
+    $contactos = $repositorio->findAll();
+
+    return $this->render('inicio.html.twig', [
+        'contactos' => $contactos,
+    ]);
+}
+
+
+
+
+
+
 
 
 

@@ -1,17 +1,19 @@
-body
-
-{
-
-    background-color: #99ccff;
-
+body {
+    background-color: #3498db; /* azul */
+    color: white; /* para que el texto contraste */
+    font-family: Arial, sans-serif;
 }
 
+h1 {
+    text-align: center;
+    margin-top: 20px;
+}
 
-
-h1
-
-{
-
-    border-bottom: 1px solid black;
-
+form {
+    max-width: 500px;
+    margin: 30px auto;
+    padding: 20px;
+    background-color: white;
+    color: black;
+    border-radius: 10px;
 }

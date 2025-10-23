@@ -1,31 +1,37 @@
 <!DOCTYPE html>
-
 <html>
-
     <head>
-
         <meta charset="UTF-8">
-
         <title>{% block title %}Welcome!{% endblock %}</title>
-
-        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text><text y=%221.3em%22 x=%220.2em%22 font-size=%2276%22 fill=%22%23fff%22>sf</text></svg>">
-
+        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text></svg>">
         {% block stylesheets %}
-
+            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+            <link href="{{ asset('css/estilos.css') }}" rel="stylesheet" />
         {% endblock %}
-
-
 
         {% block javascripts %}
-
+            {{ encore_entry_script_tags('app') }}
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
         {% endblock %}
-
     </head>
 
     <body>
+        <!-- Menú de navegación -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-light p-2 mb-3">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="{{ path('inicio') }}">Contactos</a>
+                <div class="d-flex">
+                    {% if app.user %}
+                        <span class="me-2">Bienvenido {{ app.user.email }}</span>
+                        <a class="btn btn-outline-secondary" href="{{ path('app_logout') }}">Cerrar sesión</a>
+                    {% else %}
+                        <a class="btn btn-outline-primary me-2" href="{{ path('app_login') }}">Iniciar sesión</a>
+                        <a class="btn btn-outline-success" href="{{ path('app_register') }}">Registrarse</a>
+                    {% endif %}
+                </div>
+            </div>
+        </nav>
 
         {% block body %}{% endblock %}
-
     </body>
-
 </html>
